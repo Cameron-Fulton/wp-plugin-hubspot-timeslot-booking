@@ -465,7 +465,26 @@
       font-weight: 600;
     }
 
-    /* === SUBMIT BUTTON STATES === */
+    /* === SUBMIT BUTTON === */
+    .btn-submit {
+      width: 100%;
+      font-weight: 600;
+      background-color: var(--accent);
+      color: white;
+      padding: 0.75em 2.3em 0.75em 1em;
+      border-radius: 100px;
+      border: none;
+      font-family: 'Oswald', sans-serif;
+      font-size: 16px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .btn-submit:hover {
+      background-color: var(--accent-dark);
+    }
     .btn-submit:disabled {
       opacity: 0.6;
       cursor: not-allowed;
