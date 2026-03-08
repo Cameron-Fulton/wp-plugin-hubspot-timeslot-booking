@@ -26,6 +26,7 @@ final class Plugin {
         // Core registrations.
         new PostType\EventPostType();
         new ACF\FieldGroups();
+        new Routing\CustomPathRouter();
         new Admin\SettingsPage();
 
         // Frontend.

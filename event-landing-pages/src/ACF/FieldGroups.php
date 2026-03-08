@@ -8,6 +8,7 @@ class FieldGroups {
 
     public function __construct() {
         add_action( 'acf/init', [ $this, 'register' ] );
+        add_filter( 'acf/validate_value/name=elp_custom_slug', [ $this, 'validate_custom_path' ], 10, 4 );
     }
 
     public function register(): void {
@@ -394,12 +395,53 @@ class FieldGroups {
             ],
             [
                 'key'          => 'elp_custom_slug',
-                'label'        => __( 'Custom Slug', 'event-landing-pages' ),
+                'label'        => __( 'Custom URL Path', 'event-landing-pages' ),
                 'name'         => 'elp_custom_slug',
                 'type'         => 'text',
-                'instructions' => __( 'Override the default URL slug for this event.', 'event-landing-pages' ),
+                'placeholder'  => 'locations/co/fort-collins/event/event-name',
+                'instructions' => __( 'Enter a full URL path (e.g. locations/co/fort-collins/event/event-name). No leading or trailing slashes. Leave empty to use the default /events/{slug}/ URL.', 'event-landing-pages' ),
             ],
         ];
+    }
+
+    /**
+     * Validate the custom URL path field.
+     *
+     * @param mixed  $valid      Whether the value is valid.
+     * @param mixed  $value      The field value.
+     * @param array  $field      The field config.
+     * @param string $input_name The input name.
+     * @return mixed True if valid, or an error message string.
+     */
+    public function validate_custom_path( $valid, $value, $field, $input_name ) {
+        if ( ! $valid || empty( $value ) ) {
+            return $valid;
+        }
+
+        $normalized = \EventLandingPages\Routing\CustomPathRouter::normalize_path( $value );
+
+        // Check reserved WordPress prefixes.
+        $reserved      = [ 'wp-admin', 'wp-content', 'wp-json', 'wp-login', 'feed', 'comments' ];
+        $first_segment = explode( '/', $normalized )[0];
+        if ( in_array( $first_segment, $reserved, true ) ) {
+            return __( 'This path uses a reserved WordPress prefix.', 'event-landing-pages' );
+        }
+
+        // Check for conflicts with existing pages.
+        $page = get_page_by_path( $normalized );
+        if ( $page ) {
+            return __( 'This path conflicts with an existing page.', 'event-landing-pages' );
+        }
+
+        // Check for duplicate event paths.
+        $current_post_id = (int) ( $_POST['post_ID'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
+        $router          = new \EventLandingPages\Routing\CustomPathRouter();
+        $map             = $router->get_path_map();
+        if ( isset( $map[ $normalized ] ) && $map[ $normalized ] !== $current_post_id ) {
+            return __( 'This path is already used by another event.', 'event-landing-pages' );
+        }
+
+        return $valid;
     }
 
     private function colors_tab(): array {

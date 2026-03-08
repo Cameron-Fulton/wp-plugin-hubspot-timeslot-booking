@@ -27,6 +27,7 @@ $options = [
     'options_elp_default_brand_logo',
     'options_elp_default_brand_website',
     'options_elp_default_brand_logo_invert',
+    'elp_custom_path_map',
 ];
 
 foreach ( $options as $option ) {

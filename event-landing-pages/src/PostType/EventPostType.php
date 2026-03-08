@@ -42,43 +42,55 @@ class EventPostType {
     }
 
     /**
-     * Sync the post slug when the custom slug ACF field changes.
+     * Sync the post slug when the custom path ACF field changes.
+     *
+     * Normalizes the stored path (preserving slashes) and uses only the
+     * last segment as post_name for fallback /events/{slug}/ routing.
      */
     public function sync_slug( int $post_id ): void {
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
             return;
         }
 
-        $custom_slug = get_field( 'elp_custom_slug', $post_id );
-        if ( empty( $custom_slug ) ) {
+        $custom_path = get_field( 'elp_custom_slug', $post_id );
+        if ( empty( $custom_path ) ) {
             return;
         }
 
-        $custom_slug = sanitize_title( $custom_slug );
-        $post        = get_post( $post_id );
+        $normalized = \EventLandingPages\Routing\CustomPathRouter::normalize_path( $custom_path );
 
-        if ( $post && $post->post_name !== $custom_slug ) {
+        // Save back the cleaned version if it changed.
+        if ( $normalized !== $custom_path ) {
+            update_field( 'elp_custom_slug', $normalized, $post_id );
+        }
+
+        // Use only the last segment as post_name (for fallback routing).
+        $segments  = explode( '/', $normalized );
+        $leaf_slug = end( $segments );
+        $post      = get_post( $post_id );
+
+        if ( $post && $post->post_name !== $leaf_slug ) {
             remove_action( 'save_post_' . self::SLUG, [ $this, 'sync_slug' ] );
             wp_update_post( [
                 'ID'        => $post_id,
-                'post_name' => $custom_slug,
+                'post_name' => $leaf_slug,
             ] );
             add_action( 'save_post_' . self::SLUG, [ $this, 'sync_slug' ] );
         }
     }
 
     /**
-     * Replace the permalink with the custom slug if set.
+     * Replace the permalink with the custom path if set.
      */
     public function custom_permalink( string $url, \WP_Post $post ): string {
         if ( $post->post_type !== self::SLUG ) {
             return $url;
         }
 
-        $custom_slug = get_field( 'elp_custom_slug', $post->ID );
-        if ( ! empty( $custom_slug ) ) {
-            $custom_slug = sanitize_title( $custom_slug );
-            return home_url( '/events/' . $custom_slug . '/' );
+        $custom_path = get_field( 'elp_custom_slug', $post->ID );
+        if ( ! empty( $custom_path ) ) {
+            $normalized = \EventLandingPages\Routing\CustomPathRouter::normalize_path( $custom_path );
+            return home_url( '/' . $normalized . '/' );
         }
 
         return $url;
