@@ -3,7 +3,7 @@
  * Plugin Name: Event Landing Pages
  * Plugin URI:  https://github.com/Cameron-Fulton/event-landing-pages
  * Description: Create and manage event landing pages with HubSpot time slot picker or form embed integration.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Cameron Fulton
  * Author URI:  https://searchactions.com
  * License:     GPL-2.0-or-later
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ELP_VERSION', '1.1.0' );
+define( 'ELP_VERSION', '1.2.0' );
 define( 'ELP_PLUGIN_FILE', __FILE__ );
 define( 'ELP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ELP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

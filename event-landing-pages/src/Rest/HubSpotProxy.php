@@ -7,7 +7,8 @@ defined( 'ABSPATH' ) || exit;
 class HubSpotProxy {
 
     private const NAMESPACE = 'elp/v1';
-    private const HUBSPOT_BASE = 'https://api.hubapi.com/meetings-public/v3/book';
+    private const HUBSPOT_AVAILABILITY = 'https://api.hubapi.com/meetings-public/v3/book/availability-page';
+    private const HUBSPOT_BOOK         = 'https://api.hubapi.com/meetings-public/v1/book';
 
     public function __construct() {
         add_action( 'rest_api_init', [ $this, 'register_routes' ] );
@@ -64,7 +65,7 @@ class HubSpotProxy {
                 'timezone'    => $request->get_param( 'timezone' ),
                 'monthOffset' => $request->get_param( 'monthOffset' ),
             ],
-            self::HUBSPOT_BASE . '/availability-page'
+            self::HUBSPOT_AVAILABILITY
         );
 
         $response = wp_remote_get( $url, [
@@ -123,7 +124,7 @@ class HubSpotProxy {
             'formFields'     => $form_fields,
         ];
 
-        $response = wp_remote_post( self::HUBSPOT_BASE, [
+        $response = wp_remote_post( self::HUBSPOT_BOOK, [
             'timeout' => 15,
             'headers' => [
                 'Content-Type' => 'application/json',

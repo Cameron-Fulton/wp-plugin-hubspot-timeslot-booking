@@ -1,41 +1,33 @@
-# Castle Rock Hormone Health - Event Landing Page
+# Event Landing Pages — WordPress Plugin
 
 ## Project Overview
-Static HTML landing page for a $99 Comprehensive Hormone Panel event promotion, a collaboration between Castle Rock Hormone Health and Valor Elite Training.
+Generic, white-label WordPress plugin for creating event landing pages with HubSpot integration (time slot picker or form embed).
 
 ## Tech Stack
-- Single-file static HTML (`index.html`)
-- Vanilla CSS (CSS custom properties for theming)
-- Vanilla JavaScript (minimal)
-- Google Fonts: Oswald + Source Sans 3
-- HubSpot Forms embed (`hsforms.net/forms/embed/v2.js`)
-- HubSpot time slot picker via `/hubspot-timeslot-picker` skill (custom calendar widget using the `meetings-public/v3` API)
-
-## Design System
-- Dark theme with CSS custom properties defined in `:root`
-- `--dark: #0f1114` (background)
-- `--accent: #c8102e` (red CTA)
-- `--gold: #d4a843` (highlights)
-- `--text: #e8e6e1` (body text)
-- Fonts: Oswald (headings/uppercase), Source Sans 3 (body)
-
-## Key Sections
-- Top bar with partner branding
-- Logo block (CRHH + Valor)
-- Event badge + headline
-- Biomarker/panel details
-- HubSpot form embed for sign-ups
-- HubSpot time slot picker (custom calendar widget replacing default HubSpot calendar UI)
-
-## WordPress Plugin (`event-landing-pages/`)
-- Generic/white-label WordPress plugin for event landing pages
-- CPT: `elp_event`, prefix: `elp_`, namespace: `EventLandingPages`
-- Requires ACF PRO, PSR-4 autoloading with manual fallback
+- WordPress plugin (PHP 7.4+, requires ACF PRO)
+- PSR-4 autoloading with manual fallback
+- HubSpot `meetings-public/v3` API (time slot picker)
+- HubSpot Forms embed (form booking method)
 - GitHub update checker (PUC) with `enableReleaseAssets()` for monorepo compatibility
-- **Releasing:** See [`RELEASING.md`](RELEASING.md) for version bump, zip build, and GitHub release workflow
+- JSON-LD Event schema output (automatic, via `wp_head`)
+
+## Plugin Structure
+- CPT: `elp_event`, prefix: `elp_`, namespace: `EventLandingPages`
+- Source: `event-landing-pages/src/` (PSR-4)
+- Template: `event-landing-pages/templates/single-elp_event.php` (standalone HTML, no theme header/footer)
+- Assets: `event-landing-pages/assets/` (CSS + conditional JS per booking method)
+
+## Key Architecture
+- `BrandResolver` — per-event brand → global brand → WP custom logo fallback chain
+- `EventSchema` — automatic JSON-LD Event structured data from ACF fields via `wp_head`
+- `HubSpotProxy` — REST proxy for availability (public) and booking (nonce-protected)
+- `CustomPathRouter` — per-event custom URL slugs
+- `Encryption` — sodium-encrypted HubSpot API key storage
+- Per-event color overrides via CSS custom properties (`--elp-*`)
 
 ## Conventions
-- Landing page: single `index.html` file (inline styles and scripts)
-- Plugin: PSR-4 structure under `event-landing-pages/src/`
+- PSR-4 structure under `event-landing-pages/src/`
+- All ACF field keys prefixed `elp_`
 - Mobile-responsive design with media queries
 - No build tools, no bundler, no package manager
+- **Releasing:** See [`RELEASING.md`](RELEASING.md) for version bump, zip build, and GitHub release workflow

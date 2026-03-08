@@ -32,6 +32,7 @@ final class Plugin {
         // Frontend.
         new Frontend\TemplateLoader();
         new Frontend\AssetEnqueuer();
+        new Frontend\EventSchema();
 
         // REST API.
         new Rest\HubSpotProxy();

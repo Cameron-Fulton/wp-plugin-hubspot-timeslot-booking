@@ -1,0 +1,14 @@
+# Build artifacts
+*.zip
+
+# Screenshots and debug files
+*.png
+*.jpg
+snippet-*.json
+
+# IDE and tooling
+.vscode/
+.playwright-mcp/
+
+# Claude Code local files
+.claude/

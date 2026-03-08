@@ -86,5 +86,3 @@ For deploying code to Cloudways without going through the update checker (e.g., 
    - Create a snippet via `POST /wp-json/code-snippets/v1/snippets` that downloads the GitHub main zip, extracts `event-landing-pages/` to `wp-content/plugins/`, and activates it
    - Delete the snippet and uninstall Code Snippets when done
 3. All REST API calls require Application Password auth and a browser-like `User-Agent` header
-
-See `CLAUDE.md` for server credentials and deployment details.
