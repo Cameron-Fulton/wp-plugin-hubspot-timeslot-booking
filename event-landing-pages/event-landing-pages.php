@@ -45,7 +45,7 @@ $elp_puc = ELP_PLUGIN_DIR . 'vendor/plugin-update-checker/plugin-update-checker.
 if ( file_exists( $elp_puc ) ) {
     require_once $elp_puc;
     $elp_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/Cameron-Fulton/hubspot-time-slot-booking/',
+        'https://github.com/Cameron-Fulton/wp-plugin-hubspot-timeslot-booking/',
         ELP_PLUGIN_FILE,
         'event-landing-pages'
     );
