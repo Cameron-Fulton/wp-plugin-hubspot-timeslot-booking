@@ -86,6 +86,9 @@ class AssetEnqueuer {
         $timezone_value = get_field( 'elp_default_timezone', 'option' ) ?: 'America/Denver';
         $timezone = in_array( $timezone_value, timezone_identifiers_list(), true ) ? $timezone_value : 'America/Denver';
 
+        $enable_country_code  = (bool) get_field( 'elp_enable_country_code', 'option' );
+        $default_country_code = get_field( 'elp_default_country_code', 'option' ) ?: '+1';
+
         wp_localize_script( 'elp-timeslots', 'elpEventConfig', [
             'restUrl'             => esc_url_raw( rest_url( 'elp/v1' ) ),
             'nonce'               => wp_create_nonce( 'wp_rest' ),
@@ -94,6 +97,8 @@ class AssetEnqueuer {
             'targetDate'          => sanitize_text_field( get_field( 'elp_target_date', $post_id ) ?: '' ),
             'ctaLabel'            => sanitize_text_field( get_field( 'elp_cta_label', $post_id ) ?: 'Reserve My Spot' ),
             'confirmationMessage' => sanitize_text_field( get_field( 'elp_confirmation_message', $post_id ) ?: 'Check your email for confirmation details.' ),
+            'enableCountryCode'   => $enable_country_code,
+            'defaultCountryCode'  => $enable_country_code ? sanitize_text_field( $default_country_code ) : '',
         ] );
     }
 

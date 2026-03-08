@@ -260,6 +260,43 @@ body.elp-event-page::before {
   gap: 16px;
 }
 
+/* === PHONE COUNTRY CODE === */
+.elp-phone-wrapper {
+  display: flex;
+  gap: 8px;
+}
+.elp-country-code {
+  width: 80px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--elp-border);
+  border-radius: 8px;
+  padding: 14px 8px;
+  font-size: 16px;
+  color: var(--elp-white);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239b9890'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 22px;
+}
+.elp-country-code:focus {
+  border-color: var(--elp-accent);
+  background-color: rgba(200,16,46,0.04);
+}
+.elp-country-code option {
+  background: var(--elp-dark-surface);
+  color: var(--elp-white);
+}
+.elp-phone-wrapper input[type="tel"] {
+  flex: 1;
+  min-width: 0;
+}
+
 /* === TIME SLOTS === */
 .elp-time-slots {
   display: none;

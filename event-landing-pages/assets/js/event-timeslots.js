@@ -210,7 +210,16 @@
     var firstName = document.getElementById('elpFirstName').value.trim();
     var lastName  = document.getElementById('elpLastName').value.trim();
     var email     = document.getElementById('elpEmail').value.trim();
-    var phone     = document.getElementById('elpPhone').value.trim();
+    var rawPhone  = document.getElementById('elpPhone').value.trim();
+    var phone     = rawPhone;
+
+    // Prepend country code if enabled and phone is provided.
+    if (rawPhone && config.enableCountryCode) {
+      var codeEl = document.getElementById('elpCountryCode');
+      if (codeEl) {
+        phone = codeEl.value + rawPhone;
+      }
+    }
 
     if (!firstName || !lastName || !email) return;
 

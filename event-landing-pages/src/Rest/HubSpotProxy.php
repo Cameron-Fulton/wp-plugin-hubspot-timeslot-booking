@@ -99,30 +99,34 @@ class HubSpotProxy {
     }
 
     public function book_slot( \WP_REST_Request $request ): \WP_REST_Response {
-        // Whitelist only expected fields.
-        $allowed_form_fields = [ 'firstname', 'lastname', 'email', 'phone' ];
-        $form_fields         = [];
+        // Extract contact fields from the formFields array sent by the JS.
+        $form_fields_raw = $request->get_param( 'formFields' );
+        $contact          = [];
 
-        foreach ( $request->get_param( 'formFields' ) as $field ) {
+        $allowed = [ 'firstname', 'lastname', 'email', 'phone' ];
+        foreach ( $form_fields_raw as $field ) {
             if ( ! isset( $field['name'], $field['value'] ) ) {
                 continue;
             }
-            if ( ! in_array( $field['name'], $allowed_form_fields, true ) ) {
-                continue;
+            if ( in_array( $field['name'], $allowed, true ) ) {
+                $contact[ $field['name'] ] = sanitize_text_field( $field['value'] );
             }
-            $form_fields[] = [
-                'name'  => sanitize_text_field( $field['name'] ),
-                'value' => sanitize_text_field( $field['value'] ),
-            ];
         }
 
+        // HubSpot v1 booking API expects flat fields, not the v3 formFields array.
         $payload = [
-            'slug'           => sanitize_text_field( $request->get_param( 'slug' ) ),
-            'timezone'       => sanitize_text_field( $request->get_param( 'timezone' ) ),
-            'duration'       => absint( $request->get_param( 'duration' ) ),
-            'startMillisUtc' => absint( $request->get_param( 'startMillisUtc' ) ),
-            'formFields'     => $form_fields,
+            'slug'      => sanitize_text_field( $request->get_param( 'slug' ) ),
+            'timezone'  => sanitize_text_field( $request->get_param( 'timezone' ) ),
+            'duration'  => absint( $request->get_param( 'duration' ) ),
+            'startTime' => absint( $request->get_param( 'startMillisUtc' ) ),
+            'firstName' => $contact['firstname'] ?? '',
+            'lastName'  => $contact['lastname'] ?? '',
+            'email'     => $contact['email'] ?? '',
         ];
+
+        if ( ! empty( $contact['phone'] ) ) {
+            $payload['phone'] = $contact['phone'];
+        }
 
         $response = wp_remote_post( self::HUBSPOT_BOOK, [
             'timeout' => 15,
