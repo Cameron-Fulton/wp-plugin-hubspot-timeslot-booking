@@ -6,7 +6,8 @@ defined( 'ABSPATH' ) || exit;
 
 class EventPostType {
 
-    public const SLUG = 'elp_event';
+    public const SLUG          = 'elp_event';
+    public const META_CUSTOM_PATH = 'elp_custom_slug';
 
     public function __construct() {
         add_action( 'init', [ $this, 'register' ] );
@@ -52,7 +53,7 @@ class EventPostType {
             return;
         }
 
-        $custom_path = get_field( 'elp_custom_slug', $post_id );
+        $custom_path = get_field( self::META_CUSTOM_PATH, $post_id );
         if ( empty( $custom_path ) ) {
             return;
         }
@@ -61,7 +62,7 @@ class EventPostType {
 
         // Save back the cleaned version if it changed.
         if ( $normalized !== $custom_path ) {
-            update_field( 'elp_custom_slug', $normalized, $post_id );
+            update_field( self::META_CUSTOM_PATH, $normalized, $post_id );
         }
 
         // Use only the last segment as post_name (for fallback routing).
@@ -87,10 +88,16 @@ class EventPostType {
             return $url;
         }
 
-        $custom_path = get_field( 'elp_custom_slug', $post->ID );
+        static $cache = [];
+        if ( isset( $cache[ $post->ID ] ) ) {
+            return $cache[ $post->ID ];
+        }
+
+        $custom_path = get_field( self::META_CUSTOM_PATH, $post->ID );
         if ( ! empty( $custom_path ) ) {
             $normalized = \EventLandingPages\Routing\CustomPathRouter::normalize_path( $custom_path );
-            return home_url( '/' . $normalized . '/' );
+            $cache[ $post->ID ] = home_url( '/' . $normalized . '/' );
+            return $cache[ $post->ID ];
         }
 
         return $url;

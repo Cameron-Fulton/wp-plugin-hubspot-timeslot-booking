@@ -21,9 +21,9 @@ class CustomPathRouter {
         add_filter( 'pre_handle_404', [ $this, 'prevent_false_404' ], 10, 2 );
 
         add_action( 'save_post_' . EventPostType::SLUG, [ $this, 'flush_path_cache' ] );
-        add_action( 'delete_post', [ $this, 'flush_path_cache' ] );
-        add_action( 'trashed_post', [ $this, 'flush_path_cache' ] );
-        add_action( 'untrashed_post', [ $this, 'flush_path_cache' ] );
+        add_action( 'delete_post', [ $this, 'maybe_flush_path_cache' ] );
+        add_action( 'trashed_post', [ $this, 'maybe_flush_path_cache' ] );
+        add_action( 'untrashed_post', [ $this, 'maybe_flush_path_cache' ] );
     }
 
     /**
@@ -45,7 +45,7 @@ class CustomPathRouter {
             return $query_vars;
         }
 
-        $map = $this->get_path_map();
+        $map = self::get_path_map();
 
         // Direct match against the request path.
         if ( isset( $map[ $request_path ] ) ) {
@@ -83,7 +83,7 @@ class CustomPathRouter {
     /**
      * Get the path→post_id map, using object cache → option → DB query.
      */
-    public function get_path_map(): array {
+    public static function get_path_map(): array {
         $map = wp_cache_get( self::CACHE_KEY, 'elp' );
         if ( is_array( $map ) ) {
             return $map;
@@ -95,8 +95,8 @@ class CustomPathRouter {
             return $map;
         }
 
-        $map = $this->build_path_map();
-        update_option( self::CACHE_KEY, $map, false );
+        $map = self::build_path_map();
+        update_option( self::CACHE_KEY, $map, true );
         wp_cache_set( self::CACHE_KEY, $map, 'elp' );
         return $map;
     }
@@ -104,7 +104,7 @@ class CustomPathRouter {
     /**
      * Query all published elp_event posts with a custom path.
      */
-    private function build_path_map(): array {
+    private static function build_path_map(): array {
         global $wpdb;
 
         $results = $wpdb->get_results(
@@ -116,7 +116,7 @@ class CustomPathRouter {
                    AND pm.meta_value != ''
                    AND p.post_type = %s
                    AND p.post_status = 'publish'",
-                'elp_custom_slug',
+                EventPostType::META_CUSTOM_PATH,
                 EventPostType::SLUG
             )
         );
@@ -147,11 +147,23 @@ class CustomPathRouter {
     }
 
     /**
+     * Flush the cache only when the post is an elp_event.
+     */
+    public function maybe_flush_path_cache( int $post_id ): void {
+        if ( get_post_type( $post_id ) === EventPostType::SLUG ) {
+            $this->flush_path_cache();
+        }
+    }
+
+    /**
      * Flush the cached path map.
      */
     public function flush_path_cache(): void {
         delete_option( self::CACHE_KEY );
         wp_cache_delete( self::CACHE_KEY, 'elp' );
+
+        // Eagerly rebuild so the next frontend request doesn't pay the cost.
+        self::get_path_map();
     }
 
     /**

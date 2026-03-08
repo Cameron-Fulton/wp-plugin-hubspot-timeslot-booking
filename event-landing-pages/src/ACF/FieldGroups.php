@@ -2,6 +2,8 @@
 
 namespace EventLandingPages\ACF;
 
+use EventLandingPages\PostType\EventPostType;
+
 defined( 'ABSPATH' ) || exit;
 
 class FieldGroups {
@@ -20,7 +22,7 @@ class FieldGroups {
                     [
                         'param'    => 'post_type',
                         'operator' => '==',
-                        'value'    => 'elp_event',
+                        'value'    => EventPostType::SLUG,
                     ],
                 ],
             ],
@@ -435,8 +437,7 @@ class FieldGroups {
 
         // Check for duplicate event paths.
         $current_post_id = (int) ( $_POST['post_ID'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
-        $router          = new \EventLandingPages\Routing\CustomPathRouter();
-        $map             = $router->get_path_map();
+        $map             = \EventLandingPages\Routing\CustomPathRouter::get_path_map();
         if ( isset( $map[ $normalized ] ) && $map[ $normalized ] !== $current_post_id ) {
             return __( 'This path is already used by another event.', 'event-landing-pages' );
         }
