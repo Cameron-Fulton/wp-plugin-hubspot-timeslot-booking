@@ -6,7 +6,7 @@
  * are injected as inline <style> by the plugin.
  */
 
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+.elp-event-page *, .elp-event-page *::before, .elp-event-page *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
   --elp-dark: #0f1114;
@@ -18,8 +18,8 @@
   --elp-text-muted: #9b9890;
   --elp-white: #ffffff;
   --elp-border: rgba(255,255,255,0.08);
-  --elp-font-heading: inherit;
-  --elp-font-body: inherit;
+  --elp-font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --elp-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
 }
 
 html { scroll-behavior: smooth; }
