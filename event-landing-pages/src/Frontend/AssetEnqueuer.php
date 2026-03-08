@@ -83,16 +83,17 @@ class AssetEnqueuer {
             true
         );
 
-        $timezone = get_field( 'elp_default_timezone', 'option' ) ?: 'America/Denver';
+        $timezone_value = get_field( 'elp_default_timezone', 'option' ) ?: 'America/Denver';
+        $timezone = in_array( $timezone_value, timezone_identifiers_list(), true ) ? $timezone_value : 'America/Denver';
 
         wp_localize_script( 'elp-timeslots', 'elpEventConfig', [
             'restUrl'             => esc_url_raw( rest_url( 'elp/v1' ) ),
             'nonce'               => wp_create_nonce( 'wp_rest' ),
-            'slug'                => get_field( 'elp_hubspot_slug', $post_id ) ?: '',
+            'slug'                => sanitize_text_field( get_field( 'elp_hubspot_slug', $post_id ) ?: '' ),
             'timezone'            => $timezone,
-            'targetDate'          => get_field( 'elp_target_date', $post_id ) ?: '',
-            'ctaLabel'            => get_field( 'elp_cta_label', $post_id ) ?: 'Reserve My Spot',
-            'confirmationMessage' => get_field( 'elp_confirmation_message', $post_id ) ?: 'Check your email for confirmation details.',
+            'targetDate'          => sanitize_text_field( get_field( 'elp_target_date', $post_id ) ?: '' ),
+            'ctaLabel'            => sanitize_text_field( get_field( 'elp_cta_label', $post_id ) ?: 'Reserve My Spot' ),
+            'confirmationMessage' => sanitize_text_field( get_field( 'elp_confirmation_message', $post_id ) ?: 'Check your email for confirmation details.' ),
         ] );
     }
 
@@ -106,8 +107,8 @@ class AssetEnqueuer {
         );
 
         wp_localize_script( 'elp-hubspot-form', 'elpEventConfig', [
-            'portalId' => get_field( 'elp_hubspot_portal_id', $post_id ) ?: '',
-            'formId'   => get_field( 'elp_hubspot_form_id', $post_id ) ?: '',
+            'portalId' => sanitize_text_field( get_field( 'elp_hubspot_portal_id', $post_id ) ?: '' ),
+            'formId'   => sanitize_text_field( get_field( 'elp_hubspot_form_id', $post_id ) ?: '' ),
         ] );
     }
 }

@@ -12,6 +12,9 @@ defined( 'ABSPATH' ) || exit;
 use EventLandingPages\Frontend\BrandResolver;
 
 $post_id        = get_the_ID();
+if ( ! $post_id ) {
+    return;
+}
 $brand          = BrandResolver::resolve( $post_id );
 $has_partner    = get_field( 'elp_has_partner', $post_id );
 $partner_name   = get_field( 'elp_partner_name', $post_id );
