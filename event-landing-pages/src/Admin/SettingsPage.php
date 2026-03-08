@@ -18,6 +18,9 @@ class SettingsPage {
     }
 
     public function register_options_page(): void {
+        if ( ! function_exists( 'acf_add_options_page' ) ) {
+            return;
+        }
         acf_add_options_page( [
             'page_title' => __( 'Event Landing Pages Settings', 'event-landing-pages' ),
             'menu_title' => __( 'Settings', 'event-landing-pages' ),
@@ -28,6 +31,9 @@ class SettingsPage {
     }
 
     public function register_fields(): void {
+        if ( ! function_exists( 'acf_add_options_page' ) ) {
+            return;
+        }
         acf_add_local_field_group( [
             'key'      => 'group_elp_global_settings',
             'title'    => __( 'Global Settings', 'event-landing-pages' ),
