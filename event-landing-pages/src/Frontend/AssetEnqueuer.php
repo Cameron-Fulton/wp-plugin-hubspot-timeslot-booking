@@ -89,7 +89,7 @@ class AssetEnqueuer {
         wp_localize_script( 'elp-timeslots', 'elpEventConfig', [
             'restUrl'             => esc_url_raw( rest_url( 'elp/v1' ) ),
             'nonce'               => wp_create_nonce( 'wp_rest' ),
-            'slug'                => sanitize_text_field( get_field( 'elp_hubspot_slug', $post_id ) ?: '' ),
+            'slug'                => trim( sanitize_text_field( get_field( 'elp_hubspot_slug', $post_id ) ?: '' ), '/' ),
             'timezone'            => $timezone,
             'targetDate'          => sanitize_text_field( get_field( 'elp_target_date', $post_id ) ?: '' ),
             'ctaLabel'            => sanitize_text_field( get_field( 'elp_cta_label', $post_id ) ?: 'Reserve My Spot' ),
