@@ -5,13 +5,16 @@
  * injected via wp_localize_script().
  *
  * Expected elpEventConfig properties:
- *   restUrl       - REST API base (e.g., /wp-json/elp/v1)
- *   nonce         - WP REST nonce
- *   slug          - HubSpot meeting slug
- *   timezone      - IANA timezone
- *   targetDate    - YYYY-MM-DD string
- *   ctaLabel      - Submit button text
- *   confirmationMessage - Custom confirmation text
+ *   restUrl              - REST API base (e.g., /wp-json/elp/v1)
+ *   nonce                - WP REST nonce
+ *   slug                 - HubSpot meeting slug
+ *   timezone             - IANA timezone
+ *   targetDate           - YYYY-MM-DD string
+ *   ctaLabel             - Submit button text
+ *   confirmationMessage  - Custom confirmation text
+ *   enableCountryCode    - Boolean toggle
+ *   defaultCountryCode   - Default country dial code
+ *   countryCodes         - Object of dial codes { "+1": "+1 (US / Canada)", ... }
  */
 (function () {
   'use strict';
@@ -39,10 +42,22 @@
   var submitBtn      = document.getElementById('elpSubmitBtn');
   var confirmationEl = document.getElementById('elpConfirmation');
   var spotsNotice    = document.getElementById('elpSpotsNotice');
+  var formFieldsEl   = document.getElementById('elpFormFields');
 
   if (!timeSlotsGrid) return;
 
   var selectedSlot = null;
+
+  // Form field definitions from HubSpot API response.
+  var formFieldsDef = null;
+
+  // Fallback when the API doesn't return field definitions.
+  var defaultFormFields = [
+    { name: 'firstname', label: 'First Name', required: true, type: 'string' },
+    { name: 'lastname',  label: 'Last Name',  required: true, type: 'string' },
+    { name: 'email',     label: 'Email',       required: true, type: 'string', fieldType: 'email' },
+    { name: 'phone',     label: 'Phone Number', required: false, type: 'phone' },
+  ];
 
   // ---- Helpers ----
 
@@ -84,18 +99,89 @@
     timeSlotsDate.textContent = '';
   }
 
+  // ---- Dynamic Form Fields ----
+
+  function getInputType(field) {
+    if (field.fieldType === 'email' || field.name === 'email') return 'email';
+    if (field.type === 'phone' || field.type === 'phonenumber' || field.name === 'phone') return 'tel';
+    if (field.type === 'number') return 'number';
+    return 'text';
+  }
+
+  function isPhoneField(field) {
+    return field.type === 'phone' || field.type === 'phonenumber' || field.name === 'phone';
+  }
+
+  function renderSingleField(field) {
+    var inputType = getInputType(field);
+    var required  = field.required ? ' required' : '';
+    var fieldId   = 'elpField_' + field.name;
+    var label     = field.label || field.name;
+
+    var html = '<div class="elp-field">';
+    html += '<label for="' + escapeHtml(fieldId) + '">' + escapeHtml(label) + '</label>';
+
+    if (isPhoneField(field) && config.enableCountryCode && config.countryCodes) {
+      html += '<div class="elp-phone-wrapper">';
+      html += '<select id="elpCountryCode" class="elp-country-code">';
+      var codes = config.countryCodes;
+      for (var code in codes) {
+        if (codes.hasOwnProperty(code)) {
+          var sel = code === config.defaultCountryCode ? ' selected' : '';
+          html += '<option value="' + escapeHtml(code) + '"' + sel + '>' + escapeHtml(code) + '</option>';
+        }
+      }
+      html += '</select>';
+      html += '<input type="tel" id="' + escapeHtml(fieldId) + '" name="' + escapeHtml(field.name) + '"' + required + '>';
+      html += '</div>';
+    } else {
+      html += '<input type="' + inputType + '" id="' + escapeHtml(fieldId) + '" name="' + escapeHtml(field.name) + '"' + required + '>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function renderFormFields(fields) {
+    if (!formFieldsEl) return;
+
+    var html = '';
+    var i = 0;
+
+    while (i < fields.length) {
+      var field = fields[i];
+
+      // Pair firstname + lastname side-by-side.
+      if (field.name === 'firstname' && i + 1 < fields.length && fields[i + 1].name === 'lastname') {
+        html += '<div class="elp-field-row">';
+        html += renderSingleField(fields[i]);
+        html += renderSingleField(fields[i + 1]);
+        html += '</div>';
+        i += 2;
+      } else {
+        html += renderSingleField(field);
+        i++;
+      }
+    }
+
+    formFieldsEl.innerHTML = html;
+  }
+
   // ---- API ----
 
-  function fetchAvailability() {
-    var url = config.restUrl + '/availability' +
-      '?slug=' + encodeURIComponent(config.slug) +
-      '&timezone=' + encodeURIComponent(config.timezone) +
-      '&monthOffset=' + monthOffset;
+  function fetchJSON(endpoint, params) {
+    var parts = [];
+    for (var key in params) {
+      if (params.hasOwnProperty(key)) {
+        parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+      }
+    }
+    var url = config.restUrl + endpoint + (parts.length ? '?' + parts.join('&') : '');
 
     return fetch(url, {
       headers: { 'X-WP-Nonce': config.nonce },
     }).then(function (res) {
-      if (!res.ok) throw new Error('Failed to load availability (HTTP ' + res.status + ')');
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' from ' + endpoint);
       return res.json();
     });
   }
@@ -103,6 +189,9 @@
   // ---- Render ----
 
   function renderSlots(availability) {
+    // Render the form fields (hidden until a slot is selected).
+    renderFormFields(formFieldsDef || defaultFormFields);
+
     var outer = availability.linkAvailability
       ? availability.linkAvailability.linkAvailabilityByDuration
       : availability.linkAvailabilityByDuration;
@@ -207,21 +296,39 @@
     e.preventDefault();
     if (!selectedSlot) return;
 
-    var firstName = document.getElementById('elpFirstName').value.trim();
-    var lastName  = document.getElementById('elpLastName').value.trim();
-    var email     = document.getElementById('elpEmail').value.trim();
-    var rawPhone  = document.getElementById('elpPhone').value.trim();
-    var phone     = rawPhone;
+    var fields     = formFieldsDef || defaultFormFields;
+    var formFields = [];
+    var firstName  = '';
 
-    // Prepend country code if enabled and phone is provided.
-    if (rawPhone && config.enableCountryCode) {
-      var codeEl = document.getElementById('elpCountryCode');
-      if (codeEl) {
-        phone = codeEl.value + rawPhone;
-      }
+    // Validate required fields.
+    for (var j = 0; j < fields.length; j++) {
+      if (!fields[j].required) continue;
+      var reqInput = document.getElementById('elpField_' + fields[j].name);
+      if (!reqInput || !reqInput.value.trim()) return;
     }
 
-    if (!firstName || !lastName || !email) return;
+    // Collect all field values.
+    for (var i = 0; i < fields.length; i++) {
+      var field = fields[i];
+      var input = document.getElementById('elpField_' + field.name);
+      if (!input) continue;
+
+      var value = input.value.trim();
+
+      // Prepend country code for phone fields.
+      if (isPhoneField(field) && value && config.enableCountryCode) {
+        var codeEl = document.getElementById('elpCountryCode');
+        if (codeEl) {
+          value = codeEl.value + value;
+        }
+      }
+
+      if (field.name === 'firstname') firstName = value;
+
+      if (value) {
+        formFields.push({ name: field.name, value: value });
+      }
+    }
 
     submitBtn.disabled = true;
     submitBtn.classList.add('loading');
@@ -231,15 +338,8 @@
       timezone: config.timezone,
       duration: selectedSlot.durationMs,
       startMillisUtc: selectedSlot.startMillisUtc,
-      formFields: [
-        { name: 'firstname', value: firstName },
-        { name: 'lastname', value: lastName },
-        { name: 'email', value: email },
-      ],
+      formFields: formFields,
     };
-    if (phone) {
-      payload.formFields.push({ name: 'phone', value: phone });
-    }
 
     fetch(config.restUrl + '/book', {
       method: 'POST',
@@ -302,7 +402,19 @@
     timeSlotsDate.textContent = '';
     timeSlotsLabel.textContent = 'Loading available times...';
 
-    fetchAvailability()
+    // Fetch meeting config (form fields) without blocking slot rendering.
+    fetchJSON('/meeting-config', { slug: config.slug })
+      .then(function (data) {
+        if (data && data.formFields && data.formFields.length > 0) {
+          formFieldsDef = data.formFields;
+          renderFormFields(formFieldsDef);
+        }
+      })
+      .catch(function (err) {
+        console.warn('Meeting config fetch failed, using default fields:', err);
+      });
+
+    fetchJSON('/availability', { slug: config.slug, timezone: config.timezone, monthOffset: monthOffset })
       .then(function (data) { renderSlots(data); })
       .catch(function (err) {
         console.error('Failed to load slots:', err);

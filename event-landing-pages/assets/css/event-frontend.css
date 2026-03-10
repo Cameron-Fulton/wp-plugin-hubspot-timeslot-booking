@@ -238,7 +238,8 @@ body.elp-event-page::before {
 }
 .elp-form-section input[type="text"],
 .elp-form-section input[type="email"],
-.elp-form-section input[type="tel"] {
+.elp-form-section input[type="tel"],
+.elp-form-section input[type="number"] {
   width: 100%;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--elp-border);
@@ -295,6 +296,7 @@ body.elp-event-page::before {
 .elp-phone-wrapper input[type="tel"] {
   flex: 1;
   min-width: 0;
+  width: auto;
 }
 
 /* === TIME SLOTS === */

@@ -88,6 +88,9 @@ class AssetEnqueuer {
 
         $enable_country_code  = (bool) get_field( 'elp_enable_country_code', 'option' );
         $default_country_code = get_field( 'elp_default_country_code', 'option' ) ?: '+1';
+        $country_codes        = $enable_country_code
+            ? \EventLandingPages\Admin\SettingsPage::country_code_choices()
+            : [];
 
         wp_localize_script( 'elp-timeslots', 'elpEventConfig', [
             'restUrl'             => esc_url_raw( rest_url( 'elp/v1' ) ),
@@ -99,6 +102,7 @@ class AssetEnqueuer {
             'confirmationMessage' => sanitize_text_field( get_field( 'elp_confirmation_message', $post_id ) ?: 'Check your email for confirmation details.' ),
             'enableCountryCode'   => $enable_country_code,
             'defaultCountryCode'  => $enable_country_code ? sanitize_text_field( $default_country_code ) : '',
+            'countryCodes'        => (object) $country_codes,
         ] );
     }
 

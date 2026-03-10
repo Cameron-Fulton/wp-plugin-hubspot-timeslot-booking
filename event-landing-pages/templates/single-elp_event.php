@@ -33,12 +33,7 @@ $event_end      = get_field( 'elp_event_end', $post_id ) ?: '';
 $cta_label      = get_field( 'elp_cta_label', $post_id ) ?: 'Reserve My Spot';
 $booking_method = get_field( 'elp_booking_method', $post_id ) ?: 'timeslots';
 
-// Phone country code.
-$enable_country_code  = (bool) get_field( 'elp_enable_country_code', 'option' );
-$default_country_code = get_field( 'elp_default_country_code', 'option' ) ?: '+1';
-$country_codes        = $enable_country_code
-    ? \EventLandingPages\Admin\SettingsPage::country_code_choices()
-    : [];
+// Phone country code (passed to JS via elpEventConfig).
 
 // Format dates.
 $date_display = '';
@@ -207,34 +202,8 @@ foreach ( $color_fields as $field_key => $css_var ) {
         <div class="elp-contact-form" id="elpContactForm">
             <div class="elp-selected-time-badge" id="elpSelectedTimeBadge"></div>
             <form id="elpBookingForm">
-                <div class="elp-field-row">
-                    <div class="elp-field">
-                        <label for="elpFirstName"><?php esc_html_e( 'First Name', 'event-landing-pages' ); ?></label>
-                        <input type="text" id="elpFirstName" name="firstName" required>
-                    </div>
-                    <div class="elp-field">
-                        <label for="elpLastName"><?php esc_html_e( 'Last Name', 'event-landing-pages' ); ?></label>
-                        <input type="text" id="elpLastName" name="lastName" required>
-                    </div>
-                </div>
-                <div class="elp-field">
-                    <label for="elpEmail"><?php esc_html_e( 'Email', 'event-landing-pages' ); ?></label>
-                    <input type="email" id="elpEmail" name="email" required>
-                </div>
-                <div class="elp-field">
-                    <label for="elpPhone"><?php esc_html_e( 'Phone Number', 'event-landing-pages' ); ?></label>
-                    <?php if ( $enable_country_code && ! empty( $country_codes ) ) : ?>
-                    <div class="elp-phone-wrapper">
-                        <select id="elpCountryCode" class="elp-country-code">
-                            <?php foreach ( $country_codes as $code => $label ) : ?>
-                            <option value="<?php echo esc_attr( $code ); ?>"<?php selected( $code, $default_country_code ); ?>><?php echo esc_html( $code ); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <input type="tel" id="elpPhone" name="phone">
-                    </div>
-                    <?php else : ?>
-                    <input type="tel" id="elpPhone" name="phone">
-                    <?php endif; ?>
+                <div id="elpFormFields">
+                    <!-- Dynamic fields rendered by JavaScript from HubSpot meeting config -->
                 </div>
                 <button type="submit" class="elp-btn-submit" id="elpSubmitBtn"><?php echo esc_html( $cta_label ); ?></button>
             </form>
