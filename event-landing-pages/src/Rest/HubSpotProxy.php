@@ -45,7 +45,12 @@ class HubSpotProxy {
             'callback'            => [ $this, 'get_meeting_config' ],
             'permission_callback' => '__return_true',
             'args'                => [
-                'slug' => [
+                'slug'     => [
+                    'required'          => true,
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'timezone' => [
                     'required'          => true,
                     'type'              => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
@@ -126,7 +131,8 @@ class HubSpotProxy {
         }
 
         $result = $this->proxy_hubspot_get( self::HUBSPOT_MEETING_CONFIG, [
-            'slug' => $slug,
+            'slug'     => $slug,
+            'timezone' => $request->get_param( 'timezone' ),
         ] );
 
         if ( $result instanceof \WP_REST_Response ) {

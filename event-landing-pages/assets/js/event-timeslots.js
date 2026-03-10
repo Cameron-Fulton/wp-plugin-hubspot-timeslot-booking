@@ -403,7 +403,7 @@
     timeSlotsLabel.textContent = 'Loading available times...';
 
     // Fetch meeting config (form fields) without blocking slot rendering.
-    fetchJSON('/meeting-config', { slug: config.slug })
+    fetchJSON('/meeting-config', { slug: config.slug, timezone: config.timezone })
       .then(function (data) {
         if (data && data.formFields && data.formFields.length > 0) {
           formFieldsDef = data.formFields;
